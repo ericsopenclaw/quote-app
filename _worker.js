@@ -26,7 +26,7 @@ const HTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quote Search</title>
+  <title>Daily Motivation</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -40,32 +40,28 @@ const HTML = `<!DOCTYPE html>
       color: #fff;
       padding: 2rem;
     }
-    .container {
-      width: 100%;
-      max-width: 700px;
-    }
-    .search-box {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-    input {
-      flex: 1;
-      min-width: 200px;
-      padding: 0.8rem 1.2rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 50px;
+    .card {
       background: rgba(255,255,255,0.1);
-      color: #fff;
-      outline: none;
-      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 3rem;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
     }
-    input::placeholder { color: #94a3b8; }
-    input:focus { border-color: #a78bfa; }
+    .quote {
+      font-size: 1.5rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .author {
+      font-size: 1rem;
+      color: #94a3b8;
+      margin-bottom: 2rem;
+    }
     .btn {
-      padding: 0.8rem 1.5rem;
+      padding: 0.8rem 2rem;
       font-size: 1rem;
       border: none;
       border-radius: 50px;
@@ -81,186 +77,54 @@ const HTML = `<!DOCTYPE html>
     .btn-outline {
       background: transparent;
       border: 1px solid rgba(255,255,255,0.2);
+      margin-left: 0.5rem;
     }
     .btn-outline:hover {
       background: rgba(255,255,255,0.1);
     }
-    .card {
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 2rem;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .quote {
-      font-size: 1.4rem;
-      line-height: 1.6;
-      margin-bottom: 1rem;
-    }
-    .author {
-      font-size: 1rem;
-      color: #94a3b8;
-      margin-bottom: 1.5rem;
-    }
-    .actions {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .btn-small {
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-      border: none;
-      border-radius: 50px;
-      background: rgba(255,255,255,0.1);
-      color: #a78bfa;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-small:hover { background: rgba(167, 139, 250, 0.2); }
-    .loading { color: #a78bfa; font-size: 1.2rem; }
-    .error { color: #f87171; }
-    .hidden { display: none; }
-    .tag {
-      display: inline-block;
-      padding: 0.3rem 0.8rem;
-      background: rgba(167, 139, 250, 0.2);
-      border-radius: 20px;
+    .source {
       font-size: 0.8rem;
       color: #a78bfa;
-      margin: 0.25rem;
-      cursor: pointer;
-    }
-    .tag:hover { background: rgba(167, 139, 250, 0.4); }
-    .source-tag {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      font-size: 0.75rem;
       margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search quotes... (e.g. love, life, success)" onkeypress="if(event.key==='Enter')searchLocal()">
-      <button class="btn" onclick="searchLocal()">Search 🔍</button>
-      <button class="btn btn-outline" onclick="getOnline()">Online 🎲</button>
-      <button class="btn btn-outline" onclick="getRandom()">Local 🎲</button>
-    </div>
-    
-    <div id="tags" style="text-align:center; margin-bottom: 1rem;"></div>
-    
-    <div class="card">
-      <div id="loading" class="loading hidden">Loading...</div>
-      <div id="error" class="error hidden"></div>
-      <div id="quoteContent">
-        <div id="sourceTag" class="source-tag hidden">Local Quote</div>
-        <div id="quote" class="quote"></div>
-        <div id="author" class="author"></div>
-        <div id="actions" class="actions hidden">
-          <button class="btn-small" onclick="copyQuote()">📋 Copy</button>
-          <button class="btn-small" onclick="tweetQuote()">🐦 Tweet</button>
-          <button class="btn-small" onclick="getRandom()">🔄 Another</button>
-        </div>
-      </div>
-    </div>
+  <div class="card">
+    <div class="source" id="source">📚 Local Quote</div>
+    <div id="quote" class="quote"></div>
+    <div id="author" class="author"></div>
+    <button class="btn" onclick="getRandom()">🎲 New Quote</button>
+    <button class="btn btn-outline" onclick="getOnline()">🌐 Online</button>
   </div>
 
   <script>
     const localQuotes = ${JSON.stringify(localQuotes)};
     let currentQuote = null;
-    let searchMode = 'local';
     
-    function init() {
-      renderTags();
-      getRandom();
-    }
-    
-    function renderTags() {
-      const tags = ['love', 'life', 'success', 'time', 'dreams', 'courage'];
-      const container = document.getElementById('tags');
-      container.innerHTML = tags.map(t => \`<span class="tag" onclick="document.getElementById('searchInput').value='\${t}';searchLocal()">\${t}</span>\`).join('');
-    }
-    
-    function searchLocal() {
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      if (!query) { getRandom(); return; }
-      
-      const results = localQuotes.filter(q => 
-        q.q.toLowerCase().includes(query) || q.a.toLowerCase().includes(query)
-      );
-      
-      if (results.length === 0) {
-        showError('No quotes found. Try: love, life, success, dreams...');
-        return;
-      }
-      
-      currentQuote = results[Math.floor(Math.random() * results.length)];
-      displayQuote(currentQuote, 'Local');
+    function getRandom() {
+      document.getElementById('source').textContent = '📚 Local Quote';
+      const idx = Math.floor(Math.random() * localQuotes.length);
+      currentQuote = localQuotes[idx];
+      document.getElementById('quote').textContent = '"' + currentQuote.q + '"';
+      document.getElementById('author').textContent = '— ' + currentQuote.a;
     }
     
     async function getOnline() {
-      searchMode = 'online';
-      document.getElementById('sourceTag').textContent = '🌐 Online Quote';
-      document.getElementById('sourceTag').classList.remove('hidden');
-      showLoading(true);
-      
+      document.getElementById('source').textContent = '🌐 Loading...';
       try {
         const res = await fetch('https://zenquotes.io/api/random');
         const data = await res.json();
         currentQuote = data[0];
-        displayQuote(currentQuote, '🌐 Online');
+        document.getElementById('quote').textContent = '"' + currentQuote.q + '"';
+        document.getElementById('author').textContent = '— ' + currentQuote.a;
+        document.getElementById('source').textContent = '🌐 Online Quote';
       } catch (e) {
-        showError('Online fetch failed. Try again!');
+        document.getElementById('source').textContent = '❌ Failed';
       }
-      showLoading(false);
     }
     
-    function getRandom() {
-      searchMode = 'local';
-      const idx = Math.floor(Math.random() * localQuotes.length);
-      currentQuote = localQuotes[idx];
-      displayQuote(currentQuote, 'Local');
-    }
-    
-    function displayQuote(q, source) {
-      document.getElementById('quote').textContent = '"' + q.q + '"';
-      document.getElementById('author').textContent = '— ' + q.a;
-      document.getElementById('sourceTag').textContent = source === 'Local' ? '📚 Local Quote' : '🌐 Online Quote';
-      document.getElementById('sourceTag').classList.remove('hidden');
-      document.getElementById('actions').classList.remove('hidden');
-      document.getElementById('error').classList.add('hidden');
-      document.getElementById('quoteContent').classList.remove('hidden');
-    }
-    
-    function copyQuote() {
-      if (!currentQuote) return;
-      const text = '"' + currentQuote.q + '" — ' + currentQuote.a;
-      navigator.clipboard.writeText(text);
-    }
-    
-    function tweetQuote() {
-      if (!currentQuote) return;
-      const text = '"' + currentQuote.q + '" — ' + currentQuote.a;
-      window.open(\`https://twitter.com/intent/tweet?text=\${encodeURIComponent(text)}\`, '_blank');
-    }
-    
-    function showLoading(show) {
-      document.getElementById('loading').classList.toggle('hidden', !show);
-      document.getElementById('quoteContent').classList.toggle('hidden', show);
-    }
-    
-    function showError(msg) {
-      document.getElementById('error').textContent = msg;
-      document.getElementById('error').classList.remove('hidden');
-      document.getElementById('quoteContent').classList.add('hidden');
-    }
-    
-    init();
+    getRandom();
   </script>
 </body>
 </html>`;
