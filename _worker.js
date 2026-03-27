@@ -113,9 +113,9 @@ const HTML = `<!DOCTYPE html>
     async function getOnline() {
       document.getElementById('source').textContent = '🌐 Loading...';
       try {
-        const res = await fetch('https://zenquotes.io/api/random');
+        const res = await fetch('/api/online');
         const data = await res.json();
-        currentQuote = data[0];
+        currentQuote = data;
         document.getElementById('quote').textContent = '"' + currentQuote.q + '"';
         document.getElementById('author').textContent = '— ' + currentQuote.a;
         document.getElementById('source').textContent = '🌐 Online Quote';
@@ -131,6 +131,25 @@ const HTML = `<!DOCTYPE html>
 
 export default {
   async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    
+    // API route: fetch online quote from ZenQuotes (server-side, no CORS issue)
+    if (url.pathname === '/api/online') {
+      try {
+        const res = await fetch('https://zenquotes.io/api/random');
+        const data = await res.json();
+        return new Response(JSON.stringify(data[0]), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: 'Failed' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    }
+    
+    // Serve HTML for all other routes
     return new Response(HTML, {
       headers: { 'Content-Type': 'text/html;charset=utf-8' }
     });
