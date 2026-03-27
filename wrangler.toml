@@ -1,4 +1,3 @@
 name = "quote-app"
 compatibility_date = "2026-03-27"
-main = "public/_worker.js"
-assets = { directory = "./public" }
+main = "./_worker.js"
