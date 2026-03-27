@@ -1,22 +1,22 @@
 const quotes = [
-  { quote: "簡單的事情重複做，你就是專家。", author: "馬雲" },
-  { quote: "機會是留給準備好的人。", author: "路易·巴斯德" },
-  { quote: "保持飢餓，保持愚蠢。", author: "史蒂夫·賈伯斯" },
-  { quote: "失敗是成功之母。", author: "愛迪生" },
-  { quote: "唯一不變的就是變化本身。", author: "赫拉克利特" },
-  { quote: "知識就是力量。", author: "弗朗西斯·培根" },
-  { quote: "我思故我在。", author: "笛卡爾" },
-  { quote: "醫學是科學，藝術是人。", author: "威廉·奧斯勒" },
-  { quote: "有時候你必須先離開才能抵達。", author: "巴布·狄倫" },
-  { quote: "不要問世界需要什麼，想想什麼會讓你活著。", author: "霍華德·瑟曼" },
+  { quote: "The only thing we have to fear is fear itself.", author: "Franklin D. Roosevelt" },
+  { quote: "Stay hungry, stay foolish.", author: "Steve Jobs" },
+  { quote: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
+  { quote: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+  { quote: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle" },
+  { quote: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+  { quote: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+  { quote: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  { quote: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
+  { quote: "What you get by achieving your goals is not as important as what you become.", author: "Zig Ziglar" },
 ];
 
 const HTML = `<!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>每日勵志語錄</title>
+  <title>Daily Motivation</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -75,10 +75,10 @@ const HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="card">
-    <div class="label">✨ 每日語錄</div>
+    <div class="label">✨ Daily Motivation</div>
     <div id="quote" class="quote"></div>
     <div id="author" class="author"></div>
-    <button class="btn" onclick="showRandomQuote()">換一則 🔄</button>
+    <button class="btn" onclick="showRandomQuote()">Next Quote 🔄</button>
   </div>
 
   <script>
