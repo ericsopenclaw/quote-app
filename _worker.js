@@ -95,7 +95,6 @@ const HTML = `<!DOCTYPE html>
     <div id="quote" class="quote"></div>
     <div id="author" class="author"></div>
     <button class="btn" onclick="getRandom()">🎲 New Quote</button>
-    <button class="btn btn-outline" onclick="getOnline()">🌐 Online</button>
   </div>
 
   <script>
