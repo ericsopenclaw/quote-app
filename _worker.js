@@ -11,7 +11,6 @@ const quotes = [
   { quote: "不要問世界需要什麼，想想什麼會讓你活著。", author: "霍華德·瑟曼" },
 ];
 
-// Static file content
 const HTML = `<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -72,73 +71,41 @@ const HTML = `<!DOCTYPE html>
       transform: translateY(-2px);
       box-shadow: 0 4px 20px rgba(167, 139, 250, 0.4);
     }
-    .loading {
-      font-size: 1.2rem;
-      color: #a78bfa;
-    }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="label">✨ 每日語錄</div>
-    <div id="quote" class="quote loading">載入中...</div>
+    <div id="quote" class="quote"></div>
     <div id="author" class="author"></div>
-    <button class="btn" onclick="fetchQuote()">換一則 🔄</button>
+    <button class="btn" onclick="showRandomQuote()">換一則 🔄</button>
   </div>
 
   <script>
-    const API_URL = '/api/quotes';
+    const quotes = ${JSON.stringify(quotes)};
+    let currentIndex = -1;
     
-    async function fetchQuote() {
-      const quoteEl = document.getElementById('quote');
-      const authorEl = document.getElementById('author');
-      quoteEl.textContent = '載入中...';
-      quoteEl.className = 'quote loading';
-      authorEl.textContent = '';
+    function showRandomQuote() {
+      let newIndex;
+      do {
+        newIndex = Math.floor(Math.random() * quotes.length);
+      } while (newIndex === currentIndex && quotes.length > 1);
       
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        quoteEl.textContent = '"' + data.quote + '"';
-        quoteEl.className = 'quote';
-        authorEl.textContent = '— ' + data.author;
-      } catch (e) {
-        quoteEl.textContent = '載入失敗，請稍後再試';
-        quoteEl.className = 'quote';
-      }
+      currentIndex = newIndex;
+      const q = quotes[currentIndex];
+      document.getElementById('quote').textContent = '"' + q.quote + '"';
+      document.getElementById('author').textContent = '— ' + q.author;
     }
     
-    fetchQuote();
+    showRandomQuote();
   </script>
 </body>
 </html>`;
 
-async function handleApi(request) {
-  const random = quotes[Math.floor(Math.random() * quotes.length)];
-  return new Response(JSON.stringify(random), {
-    headers: { 
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    }
-  });
-}
-
-async function handleRequest(request) {
-  const url = new URL(request.url);
-  
-  // API route
-  if (url.pathname === '/api/quotes') {
-    return handleApi(request);
-  }
-  
-  // Serve HTML for root
-  return new Response(HTML, {
-    headers: { 'Content-Type': 'text/html;charset=utf-8' }
-  });
-}
-
 export default {
   async fetch(request, env, ctx) {
-    return handleRequest(request);
+    return new Response(HTML, {
+      headers: { 'Content-Type': 'text/html;charset=utf-8' }
+    });
   }
 };
