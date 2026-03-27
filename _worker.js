@@ -1,22 +1,9 @@
-const quotes = [
-  { quote: "The only thing we have to fear is fear itself.", author: "Franklin D. Roosevelt" },
-  { quote: "Stay hungry, stay foolish.", author: "Steve Jobs" },
-  { quote: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
-  { quote: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
-  { quote: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle" },
-  { quote: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
-  { quote: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-  { quote: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
-  { quote: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
-  { quote: "What you get by achieving your goals is not as important as what you become.", author: "Zig Ziglar" },
-];
-
 const HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Motivation</title>
+  <title>Quote Search</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -30,35 +17,34 @@ const HTML = `<!DOCTYPE html>
       color: #fff;
       padding: 2rem;
     }
-    .card {
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 3rem;
-      max-width: 600px;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.1);
+    .container {
+      width: 100%;
+      max-width: 700px;
     }
-    .label {
-      font-size: 0.9rem;
-      color: #a78bfa;
-      text-transform: uppercase;
-      letter-spacing: 2px;
+    .search-box {
+      display: flex;
+      gap: 0.5rem;
       margin-bottom: 1.5rem;
     }
-    .quote {
-      font-size: 1.5rem;
-      line-height: 1.6;
-      margin-bottom: 1.5rem;
-    }
-    .author {
+    input {
+      flex: 1;
+      padding: 0.8rem 1.2rem;
       font-size: 1rem;
+      border: none;
+      border-radius: 50px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      outline: none;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    input::placeholder {
       color: #94a3b8;
     }
+    input:focus {
+      border-color: #a78bfa;
+    }
     .btn {
-      margin-top: 2rem;
-      padding: 0.8rem 2rem;
+      padding: 0.8rem 1.5rem;
       font-size: 1rem;
       border: none;
       border-radius: 50px;
@@ -71,33 +57,177 @@ const HTML = `<!DOCTYPE html>
       transform: translateY(-2px);
       box-shadow: 0 4px 20px rgba(167, 139, 250, 0.4);
     }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .quote {
+      font-size: 1.4rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .author {
+      font-size: 1rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-small {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      border: none;
+      border-radius: 50px;
+      background: rgba(255,255,255,0.1);
+      color: #a78bfa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-small:hover {
+      background: rgba(167, 139, 250, 0.2);
+    }
+    .results-info {
+      margin: 1rem 0;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    .loading {
+      color: #a78bfa;
+      font-size: 1.2rem;
+    }
+    .error {
+      color: #f87171;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="label">✨ Daily Motivation</div>
-    <div id="quote" class="quote"></div>
-    <div id="author" class="author"></div>
-    <button class="btn" onclick="showRandomQuote()">Next Quote 🔄</button>
+  <div class="container">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search quotes... (e.g. love, life, success)" onkeypress="if(event.key==='Enter')search()">
+      <button class="btn" id="searchBtn" onclick="search()">Search 🔍</button>
+      <button class="btn" id="randomBtn" onclick="getRandom()">Random 🎲</button>
+    </div>
+    
+    <div id="resultsInfo" class="results-info hidden"></div>
+    
+    <div class="card">
+      <div id="loading" class="loading hidden">Loading...</div>
+      <div id="error" class="error hidden"></div>
+      <div id="quoteContent">
+        <div id="quote" class="quote"></div>
+        <div id="author" class="author"></div>
+        <div id="actions" class="actions hidden">
+          <button class="btn-small" onclick="copyQuote()">📋 Copy</button>
+          <button class="btn-small" onclick="tweetQuote()">🐦 Tweet</button>
+          <button class="btn-small" onclick="getRandom()">🔄 Another</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    const quotes = ${JSON.stringify(quotes)};
-    let currentIndex = -1;
+    const API_URL = 'https://api.quotable.io';
+    let currentQuote = null;
     
-    function showRandomQuote() {
-      let newIndex;
-      do {
-        newIndex = Math.floor(Math.random() * quotes.length);
-      } while (newIndex === currentIndex && quotes.length > 1);
-      
-      currentIndex = newIndex;
-      const q = quotes[currentIndex];
-      document.getElementById('quote').textContent = '"' + q.quote + '"';
-      document.getElementById('author').textContent = '— ' + q.author;
+    async function fetchQuote(url) {
+      showLoading(true);
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        
+        if (data.results) {
+          // Search results
+          if (data.results.length === 0) {
+            showError('No quotes found. Try different keywords.');
+            return;
+          }
+          currentQuote = data.results[0];
+          showResultsInfo(data.total + ' quotes found');
+        } else {
+          // Single quote
+          currentQuote = data;
+          hideResultsInfo();
+        }
+        
+        displayQuote(currentQuote);
+      } catch (e) {
+        showError('Failed to fetch quote. Please try again.');
+      }
+      showLoading(false);
     }
     
-    showRandomQuote();
+    function search() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
+      fetchQuote(\`\${API_URL}/search?query=\${encodeURIComponent(query)}\`);
+    }
+    
+    function getRandom() {
+      document.getElementById('searchInput').value = '';
+      hideResultsInfo();
+      fetchQuote(\`\${API_URL}/random\`);
+    }
+    
+    function displayQuote(q) {
+      document.getElementById('quote').textContent = '"' + q.content + '"';
+      document.getElementById('author').textContent = '— ' + (q.author || 'Unknown');
+      document.getElementById('actions').classList.remove('hidden');
+    }
+    
+    function copyQuote() {
+      if (!currentQuote) return;
+      const text = '"' + currentQuote.content + '" — ' + currentQuote.author;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Copied!');
+      });
+    }
+    
+    function tweetQuote() {
+      if (!currentQuote) return;
+      const text = '"' + currentQuote.content + '" — ' + currentQuote.author;
+      const url = \`https://twitter.com/intent/tweet?text=\${encodeURIComponent(text)}\`;
+      window.open(url, '_blank');
+    }
+    
+    function showLoading(show) {
+      document.getElementById('loading').classList.toggle('hidden', !show);
+      document.getElementById('quoteContent').classList.toggle('hidden', show);
+    }
+    
+    function showError(msg) {
+      document.getElementById('error').textContent = msg;
+      document.getElementById('error').classList.remove('hidden');
+      document.getElementById('quoteContent').classList.add('hidden');
+    }
+    
+    function showResultsInfo(msg) {
+      document.getElementById('resultsInfo').textContent = msg;
+      document.getElementById('resultsInfo').classList.remove('hidden');
+    }
+    
+    function hideResultsInfo() {
+      document.getElementById('resultsInfo').classList.add('hidden');
+    }
+    
+    // Load random quote on start
+    getRandom();
   </script>
 </body>
 </html>`;
