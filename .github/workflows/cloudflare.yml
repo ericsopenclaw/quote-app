@@ -1,0 +1,32 @@
+name: Deploy to Cloudflare Pages
+on: push: branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: node-version: '20'
+      - name: Install wrangler
+        run: npm install -g wrangler
+      - name: Prepare files
+        run: |
+          HTML_FILES=$(ls *.html 2>/dev/null | head -1)
+          if [ -n "$HTML_FILES" ] && [ "$(basename $HTML_FILES)" != "index.html" ]; then cp "$HTML_FILES" index.html; fi
+          if [ -f wrangler.toml ]; then grep -v "^account_id" wrangler.toml > wrangler.toml.tmp && mv wrangler.toml.tmp wrangler.toml; fi
+      - name: Deploy to Cloudflare Pages
+        run: |
+          export CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PROJECT_NAME=$(basename $GITHUB_REPOSITORY)
+          wrangler pages project create "$PROJECT_NAME" --production-branch=main 2>/dev/null || true
+          wrangler pages deploy . --project-name="$PROJECT_NAME"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Add custom domain
+        run: |
+          export CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PROJECT_NAME=$(basename $GITHUB_REPOSITORY)
+          RESULT=$(curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/e86527afe6de4dc0540cd25c9723f10c/pages/projects/${PROJECT_NAME}/domains" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d "{\"hostname\":\"${PROJECT_NAME}.eric020730.com\"}")
+          echo "$RESULT" | grep -q '"success":true' && echo "✅ Domain added" || echo "⚠️ Check Dashboard"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
